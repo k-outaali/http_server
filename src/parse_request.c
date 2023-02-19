@@ -5,11 +5,11 @@
 
 char req[1000] = "GET /hello.txt HTTP/1.1\r\nUser-Agent: curl/7.64.1\r\nHost: www.example.com\nAccept-Language: en, min\r\n\r\n";
 
-int main(){
+/*int main(){
     fields_t result = parse_request(req, 20);
     printf("%s %s %s\n%s %s %s\n", result.method, result.uri, result.version, result.user_agent, result.host, result.accept_language); 
     return 0;
-}
+}*/
 
 fields_t parse_request(char * frame, int length){
     fields_t usefulData;

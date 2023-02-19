@@ -5,16 +5,17 @@
 #include<netinet/in.h>
 #include<fcntl.h>
 #include<stdlib.h>
-#include<debug.h>
+#include"../inc/debug.h"
+#include"../inc/parse_request.h"
 #include<unistd.h>
-
-#define CONNECTION_PORT 3500
+#define MAX_BUFFER_SIZE 1024
+#define CONNECTION_PORT 80
 int main(){
     int socket_descriptor,status,length_address,client_socket;
-    char storage_buffer[80];
+    char storage_buffer[MAX_BUFFER_SIZE];
     ssize_t read_status;
     socket_descriptor=socket(AF_INET,SOCK_STREAM,0); 
-    check(socket_descriptor>0,"Socket creation failed");
+    check(socket_descriptor<0,"Socket creation failed");
     // server and client address structures
     struct sockaddr_in server_address;
     struct sockaddr_in connection_address;
@@ -31,9 +32,25 @@ int main(){
     status=listen(socket_descriptor,5);
     check(status<0,"anable to listen to connections");
     length_address=sizeof(connection_address);
-    client_socket=accept(socket_descriptor,(struct sockaddr *)&connection_address,&length_address);
-    check(client_socket<0,"Couldn't establish connection with client");
-    read_status= read(client_socket,storage_buffer,80);
-    check(read_status==-1,"Error Reading");
+    while (1)
+    {
+        client_socket=accept(socket_descriptor,(struct sockaddr *)&connection_address,&length_address);
+        check(client_socket<0,"Couldn't establish connection with client");
+        read_status= read(client_socket,storage_buffer,MAX_BUFFER_SIZE);
+        check(read_status==-1,"Error Reading");
+        storage_buffer[read_status] = '\0';
+        printf("Message from client: %s \n",storage_buffer);
+        printf("%d\n",read_status);
+        fields_t fields= parse_request(storage_buffer,read_status);
+        printf("%s %s %s %s\n",fields.method,fields.user_agent,fields.uri,fields.accept_language);
+        close(client_socket);
+
+
+
+    }
+    close(socket_descriptor);
     
+    
+    
+
 }
