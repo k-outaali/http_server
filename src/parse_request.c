@@ -13,7 +13,6 @@ int main(){
 */
 fields_t parse_request(char * frame, int length){
     fields_t usefulData;
-    int i = 0;
     char * httpElement = strtok(frame, " ");
     check(httpElement==NULL, "No method\n");
     strncpy(usefulData.method, httpElement, MAX_METHOD_LEN);
