@@ -7,6 +7,7 @@
 #include<stdlib.h>
 #include"../inc/debug.h"
 #include"../inc/parse_request.h"
+#include "../inc/response.h"
 #include<unistd.h>
 #define MAX_BUFFER_SIZE 1024
 #define CONNECTION_PORT 3600
@@ -17,6 +18,7 @@ int main(int argc,char **argv){
     }
     int socket_descriptor,status,length_address,client_socket;
     char storage_buffer[MAX_BUFFER_SIZE];
+    char response_buffer[MAX_BUFFER_SIZE];
     ssize_t read_status;
     socket_descriptor=socket(AF_INET,SOCK_STREAM,0); 
     check(socket_descriptor<0,"Socket creation failed");
@@ -47,8 +49,9 @@ int main(int argc,char **argv){
         //printf("%d\n",read_status);
         fields_t fields = parse_request(storage_buffer,read_status);
         //printf("%s %s %s %s %s\n",fields.method,fields.version,fields.uri, fields.user_agent, fields.host);
-
-
+        process_request(fields, response_buffer);
+        printf("%s", response_buffer);
+        write(client_socket, response_buffer, strlen(response_buffer));
 
     }
     close(socket_descriptor);
