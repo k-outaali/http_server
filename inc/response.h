@@ -5,7 +5,7 @@
 #define MAX_CONTENTTYPE_LEN 30
 #define MAX_CODE_LEN    50
 #define MAX_SERVER_LEN  10
-#define MAX_DATA_LEN    100
+#define MAX_DATA_LEN    256
 
 typedef struct {
     char data[MAX_DATA_LEN];
