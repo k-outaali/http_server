@@ -52,10 +52,11 @@ int main(int argc,char **argv){
         process_request(fields, response_buffer);
         printf("%s", response_buffer);
         write(client_socket, response_buffer, strlen(response_buffer));
+        close(client_socket);
 
     }
-    close(socket_descriptor);
     
+    close(socket_descriptor);
     
     
 
