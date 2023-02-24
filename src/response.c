@@ -16,20 +16,32 @@ resp_fields_t genGETResponse(fields_t reqFields){
     if (strcmp(reqFields.uri, "/")==0){
         FILE * index = fopen("website/index.html", "rb");
         if (index != NULL){
-            long file_size;
-            fseek(index, 0, SEEK_END);
-            file_size = ftell(index);
-            fseek(index, 0, SEEK_SET);
-            fread(respFields.data, 1, file_size, index);
-            respFields.data[file_size] = '\0'; // null-terminate the string
-            //fgets(respFields.data, MAX_DATA_LEN, index);
-            strcpy(respFields.code, "200 OK");
+            fillResponse(&reqFields, &respFields, "text/html", "200 OK", index);
+            fclose(index);
         }
         else {
-            strcpy(respFields.code, "404 Not Found");
-            strcpy(respFields.data, "<h1>Error 404 :</h1><h2>File index.html Not Found</h2>");
+            FILE * notfound = fopen("default_pages/404_notfound.html", "rb");
+            if (notfound != NULL){
+                fillResponse(&reqFields, &respFields, "text/html", "404 Not Found", notfound);
+                fclose(notfound);
+            }
+            else {
+                printf("please create notfound page\n");
+            }
         }
-        fclose(index);
+    }
+    else if (strcmp(reqFields.uri,"/favicon.ico")==0){
+        char path[8+MAX_URI_LEN] = "website";
+        strncat(path, reqFields.uri, MAX_URI_LEN);
+        printf("%s\n", path);
+        FILE * resource = fopen(path, "rb");
+        if (resource != NULL){
+            fillResponse(&reqFields, &respFields, "image/x-icon", "200 OK", resource);
+            fclose(resource);
+        }
+        else {
+            fillResponse(&reqFields, &respFields, NULL, "404 Not Found", NULL);
+        }
     }
     else {
         char path[8+MAX_URI_LEN] = "website";
@@ -37,24 +49,48 @@ resp_fields_t genGETResponse(fields_t reqFields){
         printf("%s\n", path);
         FILE * resource = fopen(path, "rb");
         if (resource != NULL){
-            long file_size;
-            fseek(resource, 0, SEEK_END);
-            file_size = ftell(resource);
-            fseek(resource, 0, SEEK_SET);
-            fread(respFields.data, 1, file_size, resource);
-            respFields.data[file_size] = '\0'; // null-terminate the string
-            //fgets(respFields.data, MAX_DATA_LEN, index);
-            strcpy(respFields.code, "200 OK");
+            fillResponse(&reqFields, &respFields, "text/html", "200 OK", resource);
             fclose(resource);
         }
         else {
-            strcpy(respFields.code, "404 Not Found");
-            strcpy(respFields.data, "<h1>Error 404 : </h1><h2>File Not Found</h2>");
+            FILE * notfound = fopen("default_pages/404_notfound.html", "rb");
+            if (notfound != NULL){
+                fillResponse(&reqFields, &respFields, "text/html", "404 Not Found", notfound);
+                fclose(notfound);
+            }
+            else {
+                printf("please create notfound page\n");
+            }
         }
     }
-    strcpy(respFields.version, reqFields.version);
-    strcpy(respFields.server, "SOK");
-    strcpy(respFields.content_type, "text/html");
     return respFields;
 
+}
+
+status_t fillResponse(fields_t * request,resp_fields_t * response, char * content_type, char * code, FILE * resource){
+    status_t retval;
+    strncpy(response->code, code, MAX_CODE_LEN);
+    if (content_type != NULL){
+        strncpy(response->content_type, content_type, MAX_CONTENTTYPE_LEN);
+    }
+    strcpy(response->server, "SOK");
+    strncpy(response->version, request->version, MAX_VERSION_LEN);
+    if (resource != NULL){
+        long file_size;
+        fseek(resource, 0, SEEK_END);
+        file_size = ftell(resource);
+        if (file_size<=MAX_DATA_LEN){
+            fseek(resource, 0, SEEK_SET);
+            fread(response->data, 1, file_size, resource);
+            response->data[file_size] = '\0'; // null-terminate the string
+            retval = SUCCESS;
+        }
+        else {
+            retval = FAIL;
+        }
+    }
+    else {
+        retval = SUCCESS;
+    }
+    return retval;
 }
