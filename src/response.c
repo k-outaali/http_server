@@ -8,7 +8,7 @@ int process_request(fields_t fields, char * response){
     if (strcmp(fields.method, "GET\n")){
         respFields = genGETResponse(fields);
     }
-    sprintf(response, "%s %s\r\nServer: %s\r\nContent-Type: %s\r\n\r\n%s\r\n",respFields.version, respFields.code, respFields.server, respFields.content_type, respFields.data);
+    generateRawResponse(&respFields, response);
 }
 
 resp_fields_t genGETResponse(fields_t reqFields){
@@ -81,8 +81,11 @@ status_t fillResponse(fields_t * request,resp_fields_t * response, char * conten
         file_size = ftell(resource);
         if (file_size<=MAX_DATA_LEN){
             fseek(resource, 0, SEEK_SET);
-            fread(response->data, 1, file_size, resource);
-            response->data[file_size] = '\0'; // null-terminate the string
+            size_t real = fread(response->data, 1, file_size, resource);
+            if (strstr(content_type, "text")){
+                response->data[file_size] = '\0'; // null-terminate the string
+            }
+            snprintf(response->content_length,MAX_CONTENTLENGTH_LEN, "%ld", real);
             retval = SUCCESS;
         }
         else {
@@ -91,6 +94,40 @@ status_t fillResponse(fields_t * request,resp_fields_t * response, char * conten
     }
     else {
         retval = SUCCESS;
+    }
+    return retval;
+}
+
+status_t generateRawResponse(resp_fields_t *responseFields, char *response){
+    status_t retval;
+    if (strlen(responseFields->version) != 0 && strlen(responseFields->code) != 0){
+        sprintf(response, "%s %s\r\n", responseFields->version, responseFields->code);
+        addToHeader(response, "Server", responseFields->server);
+        addToHeader(response, "Content-Type", responseFields->content_type);
+        addToHeader(response, "Content-Length", responseFields->content_length);
+        sprintf(response + strlen(response), "\r\n");
+        sprintf(response + strlen(response), "%s\r\n", responseFields->data);
+        retval = SUCCESS;
+    }
+    else {
+        retval = FAIL;
+    }
+    return retval;
+}
+
+status_t addToHeader(char *response, char * key, char * value){
+    status_t retval;
+    if (response != NULL && key != NULL && value != NULL){
+        if (strlen(key) != 0 && strlen(value) != 0){
+            snprintf(response + strlen(response), MAX_RESP_BUFFER_SIZE, "%s: %s\r\n", key, value);
+            retval = SUCCESS;
+        }
+        else {
+            retval = FAIL;
+        }
+    }
+    else {
+        retval = FAIL;
     }
     return retval;
 }

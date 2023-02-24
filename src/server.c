@@ -9,16 +9,18 @@
 #include"../inc/parse_request.h"
 #include "../inc/response.h"
 #include<unistd.h>
+
 #define MAX_BUFFER_SIZE 1024
 #define CONNECTION_PORT 3600
+
+char storage_buffer[MAX_BUFFER_SIZE];
+char response_buffer[MAX_RESP_BUFFER_SIZE];
 int main(int argc,char **argv){
     if (argc!=2){
         printf("Usage : ./server <port>\n");
         return -1;
     }
     int socket_descriptor,status,length_address,client_socket;
-    char storage_buffer[MAX_BUFFER_SIZE];
-    char response_buffer[MAX_BUFFER_SIZE];
     ssize_t read_status;
     socket_descriptor=socket(AF_INET,SOCK_STREAM,0); 
     check(socket_descriptor<0,"Socket creation failed");
@@ -45,15 +47,14 @@ int main(int argc,char **argv){
         read_status= read(client_socket,storage_buffer,MAX_BUFFER_SIZE);
         check(read_status==-1,"Error Reading");
         storage_buffer[read_status] = '\0';
-        printf("Message from client: %s \n",storage_buffer);
-        //printf("%d\n",read_status);
-        fields_t fields = parse_request(storage_buffer,read_status);
-        //printf("%s %s %s %s %s\n",fields.method,fields.version,fields.uri, fields.user_agent, fields.host);
-        process_request(fields, response_buffer);
-        printf("%s", response_buffer);
-        write(client_socket, response_buffer, strlen(response_buffer));
+        if (read_status){
+            printf("Message from client: %s \n",storage_buffer);
+            fields_t fields = parse_request(storage_buffer,read_status);
+            process_request(fields, response_buffer);
+            printf("%s", response_buffer);
+            write(client_socket, response_buffer, strlen(response_buffer));
+        }
         close(client_socket);
-
     }
     
     close(socket_descriptor);

@@ -8,6 +8,8 @@
 #define MAX_DATA_LEN    4096
 #define MAX_CONTENTLENGTH_LEN 10
 
+#define MAX_RESP_BUFFER_SIZE 8192
+
 typedef enum {
     SUCCESS,
     FAIL
@@ -27,6 +29,8 @@ typedef struct {
 int process_request(fields_t, char *);
 resp_fields_t genGETResponse(fields_t);
 status_t fillResponse(fields_t * request,resp_fields_t * response, char * content_type, char * code, FILE * resource);
+status_t generateRawResponse(resp_fields_t *responseFields, char *response);
+status_t addToHeader(char *response, char * key, char * value);
 
 
 #endif
