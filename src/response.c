@@ -31,11 +31,30 @@ resp_fields_t genGETResponse(fields_t reqFields){
         }
         fclose(index);
     }
-    //strcpy(respFields.code, "200 OK");
+    else {
+        char path[8+MAX_URI_LEN] = "website";
+        strncat(path, reqFields.uri, MAX_URI_LEN);
+        printf("%s\n", path);
+        FILE * resource = fopen(path, "rb");
+        if (resource != NULL){
+            long file_size;
+            fseek(resource, 0, SEEK_END);
+            file_size = ftell(resource);
+            fseek(resource, 0, SEEK_SET);
+            fread(respFields.data, 1, file_size, resource);
+            respFields.data[file_size] = '\0'; // null-terminate the string
+            //fgets(respFields.data, MAX_DATA_LEN, index);
+            strcpy(respFields.code, "200 OK");
+            fclose(resource);
+        }
+        else {
+            strcpy(respFields.code, "404 Not Found");
+            strcpy(respFields.data, "<h1>Error 404 : </h1><h2>File Not Found</h2>");
+        }
+    }
     strcpy(respFields.version, reqFields.version);
     strcpy(respFields.server, "SOK");
     strcpy(respFields.content_type, "text/html");
-   // strcpy(respFields.data,"<h1>Hello World!<h2>");
     return respFields;
 
 }
