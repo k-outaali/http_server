@@ -15,7 +15,6 @@ typedef struct {
     char accept_language[MAX_ACCEPTLANG_LEN];
     char method[MAX_METHOD_LEN];
     char version[MAX_VERSION_LEN];
-    void * data;
 } fields_t;
 
 fields_t parse_request(char * frame, int length);

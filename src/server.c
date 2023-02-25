@@ -15,6 +15,8 @@
 
 char storage_buffer[MAX_BUFFER_SIZE];
 char response_buffer[MAX_RESP_BUFFER_SIZE];
+char * response_data = NULL;
+size_t data_size;
 int main(int argc,char **argv){
     if (argc!=2){
         printf("Usage : ./server <port>\n");
@@ -50,9 +52,16 @@ int main(int argc,char **argv){
         if (read_status){
             printf("Message from client: %s \n",storage_buffer);
             fields_t fields = parse_request(storage_buffer,read_status);
-            process_request(fields, response_buffer);
+            data_size = process_request(fields, response_buffer, response_data);
             printf("%s", response_buffer);
             write(client_socket, response_buffer, strlen(response_buffer));
+            if (response_data != NULL){
+                write(client_socket, response_data, data_size);
+                free(response_data);
+            }
+            else {
+                printf("no print\n");
+            }
         }
         close(client_socket);
     }
