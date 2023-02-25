@@ -8,14 +8,13 @@
 #include"../inc/debug.h"
 #include"../inc/parse_request.h"
 #include "../inc/response.h"
+#include "../inc/server.h"
 #include<unistd.h>
 
-#define MAX_BUFFER_SIZE 1024
-#define CONNECTION_PORT 3600
 
 char storage_buffer[MAX_BUFFER_SIZE];
-char response_buffer[MAX_RESP_BUFFER_SIZE];
-char * response_data = NULL;
+response_t response;
+
 size_t data_size;
 int main(int argc,char **argv){
     if (argc!=2){
@@ -52,12 +51,12 @@ int main(int argc,char **argv){
         if (read_status){
             printf("Message from client: %s \n",storage_buffer);
             fields_t fields = parse_request(storage_buffer,read_status);
-            data_size = process_request(fields, response_buffer, response_data);
-            printf("%s", response_buffer);
-            write(client_socket, response_buffer, strlen(response_buffer));
-            if (response_data != NULL){
-                write(client_socket, response_data, data_size);
-                free(response_data);
+            data_size = process_request(fields, response.response_headers, response.response_data);
+            printf("%s", response.response_headers);
+            write(client_socket, response.response_headers, strlen(response.response_headers));
+            if (response.response_data != NULL){
+                write(client_socket, response.response_data, data_size);
+                free(response.response_data);
             }
             else {
                 printf("no print\n");

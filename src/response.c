@@ -77,29 +77,24 @@ status_t fillResponse(fields_t * request,resp_fields_t * response, char * conten
     }
     strcpy(response->server, "SOK");
     strncpy(response->version, request->version, MAX_VERSION_LEN);
+    size_t length = fillResponseData(resource);
+    snprintf(response->content_length,MAX_CONTENTLENGTH_LEN, "%ld", length);
+    return retval;
+}
+
+size_t fillResponseData(FILE * resource){
+    size_t length = 0;
     if (resource != NULL){
-        long file_size;
+        size_t file_size;
         fseek(resource, 0, SEEK_END);
         file_size = ftell(resource);
         fseek(resource, 0, SEEK_SET);
-        response_data = (char *)malloc(file_size);
-        if (response_data != NULL){
-            size_t length = fread(response_data, 1, file_size, resource);
-            printf("allocated\n");
-            snprintf(response->content_length,MAX_CONTENTLENGTH_LEN, "%ld", length);
-            retval = SUCCESS;
+        response.response_data = (char *)malloc(file_size);
+        if (response.response_data != NULL){
+            length = fread(response.response_data, 1, file_size, resource);
         }
-        else {
-            retval = FAIL;
-        }
-  /*     if (strstr(content_type, "text")){
-            response->data[file_size] = '\0'; // null-terminate the string
-        }*/
     }
-    else {
-        retval = SUCCESS;
-    }
-    return retval;
+    return length;
 }
 
 status_t generateRawHeaders(resp_fields_t *responseFields, char *response){
@@ -122,7 +117,7 @@ status_t addToHeader(char *response, char * key, char * value){
     status_t retval;
     if (response != NULL && key != NULL && value != NULL){
         if (strlen(key) != 0 && strlen(value) != 0){
-            snprintf(response + strlen(response), MAX_RESP_BUFFER_SIZE, "%s: %s\r\n", key, value);
+            snprintf(response + strlen(response), MAX_BUFFER_SIZE, "%s: %s\r\n", key, value);
             retval = SUCCESS;
         }
         else {
