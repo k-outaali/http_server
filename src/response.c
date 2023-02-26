@@ -3,7 +3,6 @@
 #include <string.h>
 #include "../inc/response.h"
 #include "../inc/parse_request.h"
-#include "../inc/extensions.h"
 
 size_t process_request(fields_t fields, response_t *response){
     resp_fields_t respFields;
@@ -33,44 +32,9 @@ resp_fields_t genGETResponse(fields_t reqFields, char * response_data){
             }
         }
     }
-    else if (strcmp(reqFields.uri,"/favicon.ico")==0){
-        char path[8+MAX_URI_LEN] = "website";
-        strncat(path, reqFields.uri, MAX_URI_LEN);
-        printf("%s\n", path);
-        FILE * resource = fopen(path, "rb");
-        if (resource != NULL){
-            fillResponse(&reqFields, &respFields, "image/x-icon", "200 OK", resource);
-            fclose(resource);
-        }
-        else {
-            fillResponse(&reqFields, &respFields, NULL, "404 Not Found", NULL);
-        }
-    }
     else {
         char content_type[MAX_CONTENTTYPE_LEN];
-        extension_t extension = get_extension(reqFields.uri);
-        switch (extension){
-            case HTML:
-                strncpy(content_type, "text/html", MAX_CONTENTTYPE_LEN);
-                break;
-            case CSS:
-                strncpy(content_type, "text/css", MAX_CONTENTTYPE_LEN);
-                break;
-            case JS:
-                strncpy(content_type, "text/javascript", MAX_CONTENTTYPE_LEN);
-                break;
-            case JSON:
-                strncpy(content_type, "application/json", MAX_CONTENTTYPE_LEN);
-                break;
-            case XML:
-                strncpy(content_type, "text/xml", MAX_CONTENTTYPE_LEN);
-                break;
-            case XHTML:
-                strncpy(content_type, "application/html+xml", MAX_CONTENTTYPE_LEN);
-                break;
-            default:
-                strncpy(content_type, "*/*", MAX_CONTENTTYPE_LEN);
-        }
+        set_content_type(reqFields.uri, content_type);
         char path[8+MAX_URI_LEN] = "website";
         strncat(path, reqFields.uri, MAX_URI_LEN);
         printf("%s\n", path);
@@ -151,6 +115,44 @@ status_t addToHeader(char *response, char * key, char * value){
     }
     else {
         retval = FAIL;
+    }
+    return retval;
+}
+
+status_t set_content_type(char * filename, char * content_type){
+    status_t retval;
+    FILE * reference;
+    char * cur;
+    char * prevCur;
+    if (filename == NULL){
+        retval = FAIL;
+    }
+    else if ((cur = strstr(filename, ".")) == NULL){
+        strcpy(content_type, "*/*");
+        retval = SUCCESS;
+    }
+    else {
+        char line[MAX_CONTENTTYPE_LEN+10];
+        char * temp_extension = NULL;
+        reference = fopen("configs/mimetypes", "r");
+        prevCur = cur;
+        while ((cur = strstr(++cur, ".")) != NULL){
+            if (cur != NULL){
+                prevCur = cur;
+            }
+        }
+        prevCur++;
+        while(fgets(line, MAX_CONTENTTYPE_LEN+10,reference) != NULL){
+            temp_extension = strtok(line, ":");
+            if (strcmp(temp_extension, prevCur)==0 || strcmp(temp_extension,"*")==0){
+                char * content = strtok(NULL, "\r");
+                strncpy(content_type, content, MAX_CONTENTTYPE_LEN);
+                break;
+            }
+            strtok(NULL, "\r");
+        }
+        fclose(reference);
+        retval = SUCCESS;
     }
     return retval;
 }

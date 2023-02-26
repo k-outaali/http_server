@@ -1,5 +1,6 @@
 #ifndef RESPONSE_H
 #define RESPONSE_H
+#include <stdio.h>
 #include "parse_request.h"
 #include "server.h"
 
@@ -32,6 +33,7 @@ status_t fillResponse(fields_t * request,resp_fields_t * response, char * conten
 size_t fillResponseData(FILE * resource);
 status_t generateRawHeaders(resp_fields_t *responseFields, char *response);
 status_t addToHeader(char *response, char * key, char * value);
+status_t set_content_type(char * filename, char * content_type);
 
 
 #endif
