@@ -9,8 +9,6 @@
 #define MAX_DATA_LEN    4096
 #define MAX_CONTENTLENGTH_LEN 10
 
-#define MAX_RESP_BUFFER_SIZE 8192
-
 extern response_t response;
 
 typedef enum {
@@ -28,7 +26,7 @@ typedef struct {
 
 
 
-size_t process_request(fields_t fields, char * response_headers, char * response_data);
+size_t process_request(fields_t fields, response_t *response);
 resp_fields_t genGETResponse(fields_t reqFields, char * response_data);
 status_t fillResponse(fields_t * request,resp_fields_t * response, char * content_type, char * code, FILE * resource);
 size_t fillResponseData(FILE * resource);

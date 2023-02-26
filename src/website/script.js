@@ -1,0 +1,1 @@
+alert("hello sok server");

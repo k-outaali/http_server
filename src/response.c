@@ -3,13 +3,14 @@
 #include <string.h>
 #include "../inc/response.h"
 #include "../inc/parse_request.h"
+#include "../inc/extensions.h"
 
-size_t process_request(fields_t fields, char * response_headers, char * response_data){
+size_t process_request(fields_t fields, response_t *response){
     resp_fields_t respFields;
     if (strcmp(fields.method, "GET\n")){
         respFields = genGETResponse(fields, NULL);
     }
-    generateRawHeaders(&respFields, response_headers);
+    generateRawHeaders(&respFields, response->response_headers);
     return (size_t)atoi(respFields.content_length);
 }
 
@@ -46,12 +47,36 @@ resp_fields_t genGETResponse(fields_t reqFields, char * response_data){
         }
     }
     else {
+        char content_type[MAX_CONTENTTYPE_LEN];
+        extension_t extension = get_extension(reqFields.uri);
+        switch (extension){
+            case HTML:
+                strncpy(content_type, "text/html", MAX_CONTENTTYPE_LEN);
+                break;
+            case CSS:
+                strncpy(content_type, "text/css", MAX_CONTENTTYPE_LEN);
+                break;
+            case JS:
+                strncpy(content_type, "text/javascript", MAX_CONTENTTYPE_LEN);
+                break;
+            case JSON:
+                strncpy(content_type, "application/json", MAX_CONTENTTYPE_LEN);
+                break;
+            case XML:
+                strncpy(content_type, "text/xml", MAX_CONTENTTYPE_LEN);
+                break;
+            case XHTML:
+                strncpy(content_type, "application/html+xml", MAX_CONTENTTYPE_LEN);
+                break;
+            default:
+                strncpy(content_type, "*/*", MAX_CONTENTTYPE_LEN);
+        }
         char path[8+MAX_URI_LEN] = "website";
         strncat(path, reqFields.uri, MAX_URI_LEN);
         printf("%s\n", path);
         FILE * resource = fopen(path, "rb");
         if (resource != NULL){
-            fillResponse(&reqFields, &respFields,  "text/html", "200 OK", resource);
+            fillResponse(&reqFields, &respFields,  content_type, "200 OK", resource);
             fclose(resource);
         }
         else {
