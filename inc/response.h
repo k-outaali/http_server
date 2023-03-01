@@ -34,6 +34,8 @@ size_t fillResponseData(FILE * resource);
 status_t generateRawHeaders(resp_fields_t *responseFields, char *response);
 status_t addToHeader(char *response, char * key, char * value);
 status_t set_content_type(char * filename, char * content_type);
+status_t intermediateProcess(char * filename, FILE * resource);
+status_t get_extension(char * filename, char * extension);
 
 
 #endif

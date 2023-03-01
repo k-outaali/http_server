@@ -40,8 +40,14 @@ resp_fields_t genGETResponse(fields_t reqFields, char * response_data){
         printf("%s\n", path);
         FILE * resource = fopen(path, "rb");
         if (resource != NULL){
+            char extension[10];
+            get_extension(path, extension);
+            if (!strcmp(extension,".php")){
+                intermediateProcess(path, resource);
+            }
             fillResponse(&reqFields, &respFields,  content_type, "200 OK", resource);
             fclose(resource);
+            system("rm tmpfile");
         }
         else {
             FILE * notfound = fopen("default_pages/404_notfound.html", "rb");
@@ -152,6 +158,48 @@ status_t set_content_type(char * filename, char * content_type){
             strtok(NULL, "\r");
         }
         fclose(reference);
+        retval = SUCCESS;
+    }
+    return retval;
+}
+
+status_t intermediateProcess(char * filename, FILE * resource){
+    status_t retval;
+    if (filename != NULL){
+        char command[40];
+        sprintf(command, "php -f %s > tmpfile", filename);
+        printf("%s\n", command);
+        system(command);
+        fclose(resource);
+        resource = fopen("tmpfile", "r");
+        retval = SUCCESS;
+    }
+    else {
+        retval = FAIL;
+    }
+    return retval;
+}
+
+status_t get_extension(char * filename, char * extension){
+    status_t retval;
+    char * cur;
+    char * prevCur;
+    if (filename == NULL){
+        retval = FAIL;
+    }
+    else if ((cur = strstr(filename, ".")) == NULL){
+        extension = "";
+        retval = SUCCESS;
+    }
+    else {
+        char line[MAX_CONTENTTYPE_LEN+10];
+        prevCur = cur;
+        while ((cur = strstr(++cur, ".")) != NULL){
+            if (cur != NULL){
+                prevCur = cur;
+            }
+        }
+        strcpy(extension, prevCur);
         retval = SUCCESS;
     }
     return retval;
